@@ -8,4 +8,5 @@ if_improved::ifi! {
     } else {
         unreachable!();
     }
+}
 ```
