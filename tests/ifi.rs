@@ -17,4 +17,15 @@ fn ifi_test() {
             unreachable!();
         }
     }
+
+    enum Test {
+        A{ text: String },
+        B{ text: String },
+    }
+
+    if_improved::ifi! {
+        if let Test::A { text } = (Test::A { text: "Hello".to_string() }) if !text.is_empty() {
+            println!("{}", text);
+        }
+    }
 }

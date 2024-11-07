@@ -1,20 +1,12 @@
 use quote::{quote, ToTokens, TokenStreamExt};
 use syn::{
-    parse::{Parse, ParseStream}, parse_macro_input, Attribute, Block, Token
+    parse::Parse, parse_macro_input, Attribute, Block, Token
 };
 
 #[derive(Clone, Debug)]
 enum Expr {
     BuiltIn(syn::Expr),
     MyExprIf(MyExprIf),
-}
-
-impl Expr {
-    fn parse_without_eager_brace(input: ParseStream) -> syn::Result<Expr> {
-        <MyExprIf as Parse>::parse(input)
-            .map(Expr::MyExprIf)
-            .or(syn::Expr::parse_without_eager_brace(input).map(Expr::BuiltIn))
-    }
 }
 
 impl Parse for Expr {
@@ -39,7 +31,7 @@ impl ToTokens for Expr {
 #[derive(Clone, Debug)]
 struct MyExprIf {
     attrs: Vec<Attribute>,
-    if_token: Token![if],
+    _if_token: Token![if],
     cond: Box<Expr>,
     guard: Option<(Token![if], Box<Expr>)>,
     then_branch: Block,
@@ -50,16 +42,16 @@ impl Parse for MyExprIf {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
         let attrs: Vec<Attribute> = input.call(Attribute::parse_outer)?;
 
-        let if_token: Token![if] = input.parse()?;
+        let _if_token: Token![if] = input.parse()?;
 
-        let cond: Box<Expr> = Box::new(Expr::parse_without_eager_brace(input)?);
+        let cond: Box<Expr> = Box::new(Expr::parse(input)?);
 
         let guard = if input.peek(Token![if]) {
-            let if_token: Token![if] = input.parse()?;
+            let _if_token: Token![if] = input.parse()?;
 
-            let expr: Expr = Expr::parse_without_eager_brace(input)?;
+            let expr: Expr = Expr::parse(input)?;
 
-            Some((if_token, Box::new(expr)))
+            Some((_if_token, Box::new(expr)))
         } else {
             None
         };
@@ -78,7 +70,7 @@ impl Parse for MyExprIf {
 
         Ok(MyExprIf {
             attrs,
-            if_token,
+            _if_token,
             cond,
             guard,
             then_branch,
@@ -91,7 +83,7 @@ impl ToTokens for MyExprIf {
     fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
         let MyExprIf {
             attrs,
-            if_token: _,
+            _if_token: _,
             cond,
             guard,
             then_branch,
@@ -150,6 +142,6 @@ mod test {
             }
         );
 
-        let i: syn::ExprIf = syn::parse2(tokens.to_token_stream()).unwrap();
+        let _i: syn::ExprIf = syn::parse2(tokens.to_token_stream()).unwrap();
     }
 }
